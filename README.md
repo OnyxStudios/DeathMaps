@@ -4,10 +4,10 @@ Fear the power of those who summon the Halo over their heads
 ---
 
 Download latest:
-[![Download](https://curse.nikky.moe/api/img/302681?logo)](https://curse.nikky.moe/api/url/302681)
+[![Download](https://curse.nikky.moe/api/img/302681?logo&version=1.13)](https://curse.nikky.moe/api/url/302681?version=1.13)
 
 All Downloads:
-[![Files](https://curse.nikky.moe/api/img/302681/files?logo)](https://minecraft.curseforge.com/projects/302681/files)
+[![Files](https://curse.nikky.moe/api/img/302681/files?logo&version=1.13)](https://minecraft.curseforge.com/projects/302681/files)
 
 [![JitPack](https://jitpack.io/v/Glasspane/DeathMaps.svg)](https://jitpack.io/#Glasspane/DeathMaps)
 

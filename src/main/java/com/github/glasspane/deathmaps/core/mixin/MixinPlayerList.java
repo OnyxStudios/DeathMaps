@@ -33,16 +33,4 @@ public class MixinPlayerList {
             }
         }
     }
-
-    //@SubscribeEvent
-    //public static void onPlayerClone(PlayerEvent.Clone mixin) {
-    //    if(mixin.isWasDeath()) {
-    //        ItemStack itemstack = ItemMap.setupNewMap(mixin.getOriginal().getEntityWorld(), mixin.getOriginal().posX, mixin.getOriginal().posZ, (byte)2, true, true);
-    //        ItemMap.renderBiomePreviewMap(mixin.getOriginal().world, itemstack);
-    //        MapData.addTargetDecoration(itemstack, mixin.getOriginal().getPosition(), "Death", DeathMapsConfig.markerType);
-    //        if(!DeathMapsConfig.serversideOnly) itemstack.setTranslatableName("filled_map.deathmaps.player");
-    //        else itemstack.setStackDisplayName("Gravedigger's Map");
-    //        ItemHandlerHelper.giveItemToPlayer(mixin.getEntityPlayer(), itemstack);
-    //    }
-    //}
 }
