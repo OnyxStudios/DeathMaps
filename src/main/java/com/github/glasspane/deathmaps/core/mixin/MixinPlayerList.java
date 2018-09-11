@@ -18,18 +18,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinPlayerList {
 
     @Inject(method = "recreatePlayerEntity", at = @At("RETURN"))
-    public void onPlayerClone(EntityPlayerMP original, int respawnDimension, boolean wasDead, CallbackInfoReturnable<EntityPlayerMP> ci, EntityPlayerMP lvt_7_1_) {
-        if(wasDead) {
+    public void onPlayerClone(EntityPlayerMP original, int respawnDimension, boolean returnsFromEnd, CallbackInfoReturnable<EntityPlayerMP> ci) {
+        if(!returnsFromEnd) {
             BlockPos pos = original.getPosition();
-            ItemStack stack = ItemMap.setupNewMap(original.getEntityWorld(), pos.getX(), pos.getZ(), (byte)2, true, true);
+            ItemStack stack = ItemMap.setupNewMap(original.getEntityWorld(), pos.getX(), pos.getZ(), (byte)1, true, true);
             ItemMap.renderBiomePreviewMap(original.getEntityWorld(), stack);
             MapData.addTargetDecoration(stack, pos, "Death", MapDecoration.Type.TARGET_X);
             stack.setDisplayName(new TextComponentTranslation("filled_map.deathmaps.player"));
-            if(!lvt_7_1_.addItemStackToInventory(stack)) {
-                EntityItem item = new EntityItem(lvt_7_1_.getEntityWorld(), lvt_7_1_.posX, lvt_7_1_.posY, lvt_7_1_.posZ, stack);
+            EntityPlayerMP player = ci.getReturnValue();
+            if(!player.addItemStackToInventory(stack)) {
+                EntityItem item = new EntityItem(player.getEntityWorld(), player.posX, player.posY, player.posZ, stack);
                 item.setNoPickupDelay();
-                item.setOwnerId(lvt_7_1_.getUniqueID());
-                lvt_7_1_.getEntityWorld().spawnEntity(item);
+                item.setOwnerId(player.getUniqueID());
+                player.getEntityWorld().spawnEntity(item);
             }
         }
     }
