@@ -21,7 +21,7 @@ public class MixinPlayerList {
     public void onPlayerClone(EntityPlayerMP original, int respawnDimension, boolean returnsFromEnd, CallbackInfoReturnable<EntityPlayerMP> ci) {
         if(!returnsFromEnd) {
             BlockPos pos = original.getPosition();
-            ItemStack stack = ItemMap.setupNewMap(original.getEntityWorld(), pos.getX(), pos.getZ(), (byte)1, true, true);
+            ItemStack stack = ItemMap.setupNewMap(original.getEntityWorld(), pos.getX(), pos.getZ(), (byte)2, true, true);
             ItemMap.renderBiomePreviewMap(original.getEntityWorld(), stack);
             MapData.addTargetDecoration(stack, pos, "Death", MapDecoration.Type.TARGET_X);
             stack.setDisplayName(new TextComponentTranslation("filled_map.deathmaps.player"));
