@@ -2,31 +2,44 @@ buildscript {
     repositories {
         jcenter()
         maven {
+            name = "DimDev"
+            url = "https://www.dimdev.org/maven/"
+        }
+
+        maven {
+            name = "Sponge"
+            url = "https://repo.spongepowered.org/maven"
+        }
+
+        maven {
             name = "Forge"
             url = "http://files.minecraftforge.net/maven"
         }
+
         maven {
             name = "Sonatype"
             url = 'https://oss.sonatype.org/content/groups/public'
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'org.dimdev:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
     }
 }
 
 plugins {
     id 'com.matthewprenger.cursegradle' version '1.1.0'
     id 'maven-publish'
+    id 'java'
 }
 
-apply plugin: 'net.minecraftforge.gradle.forge'
+//apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'net.minecraftforge.gradle.tweaker-client'
 apply plugin: 'com.matthewprenger.cursegradle'
+apply plugin: 'org.spongepowered.mixin'
 
 apply from: 'https://gist.githubusercontent.com/UpcraftLP/0a98a7dfe913bd3e99073efa7ad0353b/raw/mod_script.gradle'
 //Only edit below this line, the above code adds and enables the nessasary things for Forge to be setup.
-import java.time.Year
-
 
 def username = "${modid}"
 if (project.hasProperty('dev_mail')) {
@@ -40,7 +53,7 @@ def artifactID = project.hasProperty('maven-artifact') ? findProperty('maven_art
 def buildTimeStamp = new Date().getTime()
 
 def buildVersion = project.mod_version + ext.buildName
-version = "${project.mc_version}-" + buildVersion
+version = "${project.mc_version}-${buildVersion}"
 group = project.maven_group // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 //noinspection GroovyUnusedAssignment
 archivesBaseName = project.modid
@@ -51,42 +64,31 @@ compileJava {
     sourceCompatibility = targetCompatibility = project.jvm_version
 }
 
-def addProjectSourceSetIDE(final String sourceSet) {
-    File javaSource = file("src/" + sourceSet + "/java")
-    if(javaSource.exists()) idea.module.sourceDirs += javaSource
+compileJava {
+    options.encoding = 'UTF-8'
+}
 
-    File resources = file("src/" + sourceSet + "/resources")
-    if(resources.exists()) idea.module.resourceDirs += resources
+tasks.build.doLast {
+    println("Current version is ${project.artifact}-${project.version}")
+    println("Changelog:")
+    println(change_log)
 }
 
 repositories {
-
-    maven {
-        //JEI files
-        name = "DVS1 Maven FS"
-        url = "http://dvs1.progwml6.com/files/maven"
-    }
-    maven {
-        // location of a maven mirror for JEI files, as a fallback
-        name = "ModMaven"
-        url = "http://modmaven.k-4u.nl"
-    }
-
-    maven {
-        //hwyla
-        name = "TehNut"
-        url = "https://tehnut.info/maven"
-    }
-
-    //local maven, if present
     mavenLocal()
+    jcenter()
+    mavenCentral()
+
+    maven {
+        name = "DimDev"
+        url = "https://www.dimdev.org/maven/"
+    }
 
     maven {
         //fallback for almost everything, this is CurseForge :P
         name = "CurseForge"
         url = "https://minecraft.curseforge.com/api/maven"
     }
-
     maven {
         //get dependencies from github
         name = "JitPack"
@@ -95,8 +97,17 @@ repositories {
 
 }
 
+mixin {
+    defaultObfuscationEnv notch
+    add sourceSets.main, "mixins.${modid}.refmap.json"
+}
+
 minecraft {
-    version = "${project.mc_version}-${project.forge_version}"
+    version = "${project.mc_version}"
+
+    //tweakClass = 'org.dimdev.riftloader.launch.RiftLoaderTweaker' //pre-1.0.3
+    tweakClass = 'org.dimdev.riftloader.launch.RiftLoaderClientTweaker'
+
     if(project.hasProperty('runDir')) {
         runDir = project.runDir
     }
@@ -108,19 +119,18 @@ minecraft {
 		runDir = "run"
 	}
     
-    mappings = project.forge_mappings
+    mappings = project.mc_mappings
     if("${mappings}" != "${project.ext.mappings}" && "${mappings}".startsWith("snapshot_")) {
         println(String.format("You are on old mappings, latest mappings are %s (you are on %s)", project.ext.mappings, mappings))
     }
-    makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+    //makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 	
 	replace "@VERSION@", project.mod_version
     def fingerPrintKey = project.hasProperty('public_key') ? findProperty('public_key').replace(":", "").toLowerCase(Locale.ROOT) : "undefined"
     replace "@FINGERPRINTKEY@", fingerPrintKey
     replace "@UPDATE_JSON@", project.update_json
-    replace "after:forge", "after:forge@[" + project.forge_version + ",)"
-    replace "after:glasspane", "after:glasspane@[" + project.gp_version + ",)"
     replaceIn "${project.reference_class}".replace(".", "/") + ".java"
+    replaceIn "pack.mcmeta"
 
     //auto-configure the run arguments
     if(project.hasProperty('dev_uuid')) {
@@ -132,11 +142,11 @@ minecraft {
     }
 
     //skip the screen to confirm that you want to load a world with missing registry entries
-    serverJvmArgs += "-Dfml.doNotBackup=true"
-    clientJvmArgs += "-Dfml.doNotBackup=true"
+    //serverJvmArgs += "-Dfml.doNotBackup=true"
+    //clientJvmArgs += "-Dfml.doNotBackup=true"
 
     // skip having to confirm on server
-    serverJvmArgs += "-Dfml.queryResult=confirm"
+    //serverJvmArgs += "-Dfml.queryResult=confirm"
 
     // disable server gui
     serverRunArgs += "nogui"
@@ -146,25 +156,16 @@ minecraft {
     clientJvmArgs += '-Dlog4j.skipJansi=true'
 }
 
-// API jar
-task apiJar(type: Jar) {
-    onlyIf{
-        project.hasProperty("api_package")
-    }
-    from sourceSets.api.allJava
-    include new String(findProperty("api_package") + "/**").replace(".", "/")
-    from ("LICENSE") {
-        include "*"
-    }
+jar {
+    from "LICENSE"
     manifest.mainAttributes(
-            "Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})",
-            "Implementation-Title": project.name + '-api',
-            "Implementation-Version": project.version,
-            "Maven-Artifact":"${project.group}:${artifactID}:${project.version}:api",
+            "Implementation-Title": project.name,
+            "Implementation-Version": "${project.mod_version}",
+            "Maven-Artifact":"${project.group}:${artifactID}:${project.version}",
             "Timestamp": buildTimeStamp,
-            "Built-On": "${mc_version}-${forge_version}"
+            "Built-On": project.mc_version,
+            "Built-On-Rift": project.rift_version
     )
-    classifier = 'api'
 }
 
 // Javadoc jar
@@ -179,25 +180,42 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
             "Implementation-Version": project.version,
             "Maven-Artifact":"${project.group}:${artifactID}:${project.version}:javadoc",
             "Timestamp": buildTimeStamp,
-            "Built-On": "${mc_version}-${forge_version}"
+            "Built-On": project.mc_version,
+            "Built-On-Rift": project.rift_version
     )
     classifier = 'javadoc'
 }
 
-jar {
-    from sourceSets.api.output
+sourceJar {
     from "LICENSE"
     manifest.mainAttributes(
-            "Implementation-Title": project.name,
-            "Implementation-Version": "${project.mod_version}",
-            "Maven-Artifact":"${project.group}:${artifactID}:${project.version}",
+            "Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})",
+            "Implementation-Title": project.name + '-sources',
+            "Implementation-Version": project.version,
+            "Maven-Artifact":"${project.group}:${artifactID}:${project.version}:sources",
             "Timestamp": buildTimeStamp,
-            "Built-On": "${project.mc_version}-${project.forge_version}"
-            //"FMLAT": "${project.modid}_at.cfg"
+            "Built-On": project.mc_version,
+            "Built-On-Rift": project.rift_version
     )
 }
 
-task signApiJar(type: SignJar, dependsOn: apiJar) {
+task deobfJar(type: Jar, dependsOn: classes) {
+    from sourceSets.main.output
+    from "LICENSE"
+    manifest.mainAttributes(
+            "Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})",
+            "Implementation-Title": project.name + '-deobf',
+            "Implementation-Version": project.version,
+            "Maven-Artifact":"${project.group}:${artifactID}:${project.version}:deobf",
+            "Timestamp": buildTimeStamp,
+            "Built-On": project.mc_version,
+            "Built-On-Rift": project.rift_version
+    )
+    classifier = 'deobf'
+}
+
+//sign Jar
+task signJar(type: SignJar, dependsOn: reobfJar) {
     onlyIf {
         project.hasProperty('sign_keyStore')
     }
@@ -206,8 +224,21 @@ task signApiJar(type: SignJar, dependsOn: apiJar) {
     storePass = findProperty('sign_storePass')
     alias = findProperty('sign_alias')
 
-    inputFile = apiJar.archivePath
-    outputFile = apiJar.archivePath
+    inputFile = jar.archivePath
+    outputFile = jar.archivePath
+}
+
+task signDeobfJar(type: SignJar, dependsOn: deobfJar) {
+    onlyIf {
+        project.hasProperty('sign_keyStore')
+    }
+    keyPass = findProperty('sign_keyPass')
+    keyStore = findProperty('sign_keyStore')
+    storePass = findProperty('sign_storePass')
+    alias = findProperty('sign_alias')
+
+    inputFile = deobfJar.archivePath
+    outputFile = deobfJar.archivePath
 }
 
 task signJavadocJar(type: SignJar, dependsOn: javadocJar) {
@@ -223,42 +254,42 @@ task signJavadocJar(type: SignJar, dependsOn: javadocJar) {
     outputFile = javadocJar.archivePath
 }
 
-task signJar(type: SignJar, dependsOn: reobfJar) {
-    onlyIf {
-        project.hasProperty('sign_keyStore')
-    }
-    keyPass = findProperty('sign_keyPass')
-    keyStore = findProperty('sign_keyStore')
-    storePass = findProperty('sign_storePass')
-    alias = findProperty('sign_alias')
-
-    inputFile = jar.archivePath
-    outputFile = jar.archivePath
-}
-
 if (JavaVersion.current().isJava8Compatible()) {
     allprojects {
         tasks.withType(Javadoc) {
             options.addStringOption('Xdoclint:none', '-quiet')
         }
+
+        compileJava {
+            options.encoding = 'UTF-8'
+        }
     }
+} else {
+    throw new IllegalArgumentException("wrong java version")
 }
 
 dependencies {
-    compile "com.github.GlassPane:GlassPane:${gp_version}"
+    implementation "org.dimdev:rift:${rift_version}:dev"
+
+    //annotation magic ftw
+    compileOnly "com.github.InsomniaKitten:Pylon:${pylon_version}"
+    annotationProcessor "com.github.InsomniaKitten:Pylon:${pylon_version}"
 }
 if(project.hasProperty("api_package")) tasks.build.dependsOn signApiJar
-tasks.build.dependsOn signJar, signJavadocJar
+tasks.build.dependsOn signJar, signDeobfJar, signJavadocJar
+tasks.curseforge.mustRunAfter signJar, signDeobfJar, signJavadocJar
 tasks.curseforge.dependsOn build
 
 artifacts {
     //archives apiJar
+    archives sourceJar
     archives javadocJar
+    archives deobfJar
 }
 
 def curseRelations = {
     //requiredDependency '' //add curseforge-slug here
-    optionalDependency 'glasspane'
+    requiredDependency 'rift'
 }
 
 
@@ -276,40 +307,16 @@ curseforge {
             relations curseRelations
 
             addArtifact javadocJar
-            //addArtifact sourceJar
+            addArtifact sourceJar
+            addArtifact deobfJar
             //addArtifact apiJar
 
             //cursegradle will automatically determine the current version
-            addGameVersion '1.12'
-            addGameVersion '1.12.1'
-            addGameVersion '1.12.2'
+            addGameVersion '1.13'
 
             mainArtifact(jar) {
-                displayName = "${project.mod_name} v${project.mod_version} MC${project.mc_version}"
+                displayName = "[Rift] ${project.mod_name} v${project.mod_version} MC${project.mc_version}"
             }
         }
     }
-}
-
-processResources
-{
-    // this will ensure that this task is redone when the versions change.
-    inputs.property "version", version
-    inputs.property "mcversion", project.minecraft.version
-
-    // replace stuff in mcmod.info, nothing else
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-                
-        // replace version and mcversion
-        expand 'modid':project.modid, 'name':project.mod_name, 'description':project.mod_description, 'version':project.mod_version, 'mcversion':project.minecraft.version, 'url':project.url, 'updateUrl':project.update_json, 'year':String.valueOf(Year.now().getValue())
-    }
-        
-    // copy everything else, thats not the mcmod.info
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
-    }
-	
-	//ATs
-	rename '(.+_at.cfg)', 'META-INF/$1'
 }

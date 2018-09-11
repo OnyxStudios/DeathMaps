@@ -1,0 +1,11 @@
+{
+    "required": true,
+    "minVersion": "0.7.7",
+    "compatibilityLevel": "JAVA_8",
+    "target": "@env(DEFAULT)",
+    "package": "com.github.glasspane.deathmaps.core.mixin",
+    "refmap": "mixins.deathmaps.refmap.json",
+    "mixins": [
+        "MixinPlayerList"
+    ]
+}
