@@ -65,7 +65,7 @@ curseforge {
         project {
             id = findProperty("curseforge_id")
             mainArtifact(jar) {
-                displayName = "${project.archivesBaseName} MC${project.minecraft_version} v${project.version}"
+                displayName = "${project.archivesBaseName} v${project.version} MC${project.minecraft_version}"
             }
             releaseType = project.release_type
 
