@@ -2,7 +2,7 @@
 
 ---
 Download latest (1.14):
-[![Download](https://curse.nikky.moe/api/img/302681?logo&version=1.13)](https://curse.nikky.moe/api/url/302681?version=1.14)
+[![Download](https://curse.nikky.moe/api/img/302681?logo&version=1.14-Snapshot)](https://curse.nikky.moe/api/url/302681?version=1.14-Snapshot)
 
 Download latest (1.12.2):
 [![Download](https://curse.nikky.moe/api/img/302681?logo&version=1.12.2)](https://curse.nikky.moe/api/url/302681?version=1.12.2)
