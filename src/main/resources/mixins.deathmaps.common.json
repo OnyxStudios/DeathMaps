@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "nerdhub.deathmaps.mixins",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "MixinPlayerManager"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

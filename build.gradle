@@ -1,315 +1,54 @@
-buildscript {
-    repositories {
-        jcenter()
-        maven {
-            name = "Forge"
-            url = "http://files.minecraftforge.net/maven"
-        }
-        maven {
-            name = "Sonatype"
-            url = 'https://oss.sonatype.org/content/groups/public'
-        }
-    }
-    dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-    }
-}
-
 plugins {
-    id 'com.matthewprenger.cursegradle' version '1.1.0'
-    id 'maven-publish'
+	id 'fabric-loom' version '0.2.0-SNAPSHOT'
 }
 
-apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'com.matthewprenger.cursegradle'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
-apply from: 'https://gist.githubusercontent.com/UpcraftLP/0a98a7dfe913bd3e99073efa7ad0353b/raw/mod_script.gradle'
-//Only edit below this line, the above code adds and enables the nessasary things for Forge to be setup.
-import java.time.Year
+archivesBaseName = "deathmaps"
+version = "1.0.0"
 
-
-def username = "${modid}"
-if (project.hasProperty('dev_mail')) {
-    username = "${dev_mail}"
-}
-else if(project.hasProperty('dev_username')) {
-    username = "${dev_username}"
-}
-
-def artifactID = project.hasProperty('maven-artifact') ? findProperty('maven_artifact') : project.archivesBaseName
-def buildTimeStamp = new Date().getTime()
-
-def buildVersion = project.mod_version + ext.buildName
-version = "${project.mc_version}-" + buildVersion
-group = project.maven_group // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-//noinspection GroovyUnusedAssignment
-archivesBaseName = project.modid
-tasks.build.doFirst { println("Current version is ${modid}-${version}") }
-
-sourceCompatibility = targetCompatibility = project.jvm_version // Need this here so eclipse task generates correctly.
-compileJava {
-    sourceCompatibility = targetCompatibility = project.jvm_version
-}
-
-def addProjectSourceSetIDE(final String sourceSet) {
-    File javaSource = file("src/" + sourceSet + "/java")
-    if(javaSource.exists()) idea.module.sourceDirs += javaSource
-
-    File resources = file("src/" + sourceSet + "/resources")
-    if(resources.exists()) idea.module.resourceDirs += resources
+minecraft {
+    
 }
 
 repositories {
-
-    maven {
-        //JEI files
-        name = "DVS1 Maven FS"
-        url = "http://dvs1.progwml6.com/files/maven"
-    }
-    maven {
-        // location of a maven mirror for JEI files, as a fallback
-        name = "ModMaven"
-        url = "http://modmaven.k-4u.nl"
-    }
-
-    maven {
-        //hwyla
-        name = "TehNut"
-        url = "https://tehnut.info/maven"
-    }
-
-    //local maven, if present
-    mavenLocal()
-
-    maven {
-        //fallback for almost everything, this is CurseForge :P
-        name = "CurseForge"
-        url = "https://minecraft.curseforge.com/api/maven"
-    }
-
-    maven {
-        //get dependencies from github
-        name = "JitPack"
-        url = "https://jitpack.io"
-    }
-
-}
-
-minecraft {
-    version = "${project.mc_version}-${project.forge_version}"
-    if(project.hasProperty('runDir')) {
-        runDir = project.runDir
-    }
-    else if(file('../run').exists()) {
-		runDir = "../run"
-	}
-	else
-	{
-		runDir = "run"
-	}
-    
-    mappings = project.forge_mappings
-    if("${mappings}" != "${project.ext.mappings}" && "${mappings}".startsWith("snapshot_")) {
-        println(String.format("You are on old mappings, latest mappings are %s (you are on %s)", project.ext.mappings, mappings))
-    }
-    makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
-	
-	replace "@VERSION@", project.mod_version
-    def fingerPrintKey = project.hasProperty('public_key') ? findProperty('public_key').replace(":", "").toLowerCase(Locale.ROOT) : "undefined"
-    replace "@FINGERPRINTKEY@", fingerPrintKey
-    replace "@UPDATE_JSON@", project.update_json
-    replace "after:forge", "after:forge@[" + project.forge_version + ",)"
-    replace "after:glasspane", "after:glasspane@[" + project.gp_version + ",)"
-    replaceIn "${project.reference_class}".replace(".", "/") + ".java"
-
-    //auto-configure the run arguments
-    if(project.hasProperty('dev_uuid')) {
-        clientRunArgs += "--uuid=${dev_uuid}"
-    }
-    else {
-        clientRunArgs += "--username=${username}"
-        if(project.hasProperty('dev_password')) clientRunArgs += "--password=${dev_password}"
-    }
-
-    //skip the screen to confirm that you want to load a world with missing registry entries
-    serverJvmArgs += "-Dfml.doNotBackup=true"
-    clientJvmArgs += "-Dfml.doNotBackup=true"
-
-    // skip having to confirm on server
-    serverJvmArgs += "-Dfml.queryResult=confirm"
-
-    // disable server gui
-    serverRunArgs += "nogui"
-
-    //skip jansi warnings in the log
-    serverJvmArgs += '-Dlog4j.skipJansi=true'
-    clientJvmArgs += '-Dlog4j.skipJansi=true'
-}
-
-// API jar
-task apiJar(type: Jar) {
-    onlyIf{
-        project.hasProperty("api_package")
-    }
-    from sourceSets.api.allJava
-    include new String(findProperty("api_package") + "/**").replace(".", "/")
-    from ("LICENSE") {
-        include "*"
-    }
-    manifest.mainAttributes(
-            "Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})",
-            "Implementation-Title": project.name + '-api',
-            "Implementation-Version": project.version,
-            "Maven-Artifact":"${project.group}:${artifactID}:${project.version}:api",
-            "Timestamp": buildTimeStamp,
-            "Built-On": "${mc_version}-${forge_version}"
-    )
-    classifier = 'api'
-}
-
-// Javadoc jar
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    from javadoc.destinationDir
-    from ("LICENSE") {
-        include "*"
-    }
-    manifest.mainAttributes(
-            "Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})",
-            "Implementation-Title": project.name + '-javadoc',
-            "Implementation-Version": project.version,
-            "Maven-Artifact":"${project.group}:${artifactID}:${project.version}:javadoc",
-            "Timestamp": buildTimeStamp,
-            "Built-On": "${mc_version}-${forge_version}"
-    )
-    classifier = 'javadoc'
-}
-
-jar {
-    from sourceSets.api.output
-    from "LICENSE"
-    manifest.mainAttributes(
-            "Implementation-Title": project.name,
-            "Implementation-Version": "${project.mod_version}",
-            "Maven-Artifact":"${project.group}:${artifactID}:${project.version}",
-            "Timestamp": buildTimeStamp,
-            "Built-On": "${project.mc_version}-${project.forge_version}"
-            //"FMLAT": "${project.modid}_at.cfg"
-    )
-}
-
-task signApiJar(type: SignJar, dependsOn: apiJar) {
-    onlyIf {
-        project.hasProperty('sign_keyStore')
-    }
-    keyPass = findProperty('sign_keyPass')
-    keyStore = findProperty('sign_keyStore')
-    storePass = findProperty('sign_storePass')
-    alias = findProperty('sign_alias')
-
-    inputFile = apiJar.archivePath
-    outputFile = apiJar.archivePath
-}
-
-task signJavadocJar(type: SignJar, dependsOn: javadocJar) {
-    onlyIf {
-        project.hasProperty('sign_keyStore')
-    }
-    keyPass = findProperty('sign_keyPass')
-    keyStore = findProperty('sign_keyStore')
-    storePass = findProperty('sign_storePass')
-    alias = findProperty('sign_alias')
-
-    inputFile = javadocJar.archivePath
-    outputFile = javadocJar.archivePath
-}
-
-task signJar(type: SignJar, dependsOn: reobfJar) {
-    onlyIf {
-        project.hasProperty('sign_keyStore')
-    }
-    keyPass = findProperty('sign_keyPass')
-    keyStore = findProperty('sign_keyStore')
-    storePass = findProperty('sign_storePass')
-    alias = findProperty('sign_alias')
-
-    inputFile = jar.archivePath
-    outputFile = jar.archivePath
-}
-
-if (JavaVersion.current().isJava8Compatible()) {
-    allprojects {
-        tasks.withType(Javadoc) {
-            options.addStringOption('Xdoclint:none', '-quiet')
-        }
-    }
+	maven { url = "https://oss.sonatype.org/content/repositories/releases/" }
 }
 
 dependencies {
-    compile "com.github.GlassPane:GlassPane:${gp_version}"
-}
-if(project.hasProperty("api_package")) tasks.build.dependsOn signApiJar
-tasks.build.dependsOn signJar, signJavadocJar
-tasks.curseforge.dependsOn build
+    minecraft "com.mojang:minecraft:19w08b"
+    mappings "net.fabricmc:yarn:19w08b.6"
+    modCompile "net.fabricmc:fabric-loader:0.3.7.109"
+	compileOnly "com.google.code.findbugs:jsr305:3.0.2"
 
-artifacts {
-    //archives apiJar
-    archives javadocJar
-}
 
-def curseRelations = {
-    //requiredDependency '' //add curseforge-slug here
-    optionalDependency 'glasspane'
+	// Fabric API. This is technically optional, but you probably want it anyway.
+	modCompile "net.fabricmc:fabric:0.2.3.104"
 }
 
-
-curseforge {
-    if (project.hasProperty('curse_key'))
-        apiKey = project.curse_key
-
-    if(project.hasProperty('curse_id')) {
-        project {
-            id = project.curse_id
-            changelogType = 'markdown'
-            changelog = "${project.ext.changeLog}"
-            releaseType = project.release_type
-
-            relations curseRelations
-
-            addArtifact javadocJar
-            //addArtifact sourceJar
-            //addArtifact apiJar
-
-            //cursegradle will automatically determine the current version
-            addGameVersion '1.12'
-            addGameVersion '1.12.1'
-            addGameVersion '1.12.2'
-
-            mainArtifact(jar) {
-                displayName = "${project.mod_name} v${project.mod_version} MC${project.mc_version}"
-            }
-        }
-    }
+// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+// if it is present.
+// If you remove this task, sources will not be generated.
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
 }
 
-processResources
-{
-    // this will ensure that this task is redone when the versions change.
-    inputs.property "version", version
-    inputs.property "mcversion", project.minecraft.version
+processResources {
+    // this will ensure that this task is redone when there"s a change
+    inputs.property "version", project.version
 
-    // replace stuff in mcmod.info, nothing else
+    // replace stuff in fabric.mod.json, nothing else
     from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-                
-        // replace version and mcversion
-        expand 'modid':project.modid, 'name':project.mod_name, 'description':project.mod_description, 'version':project.mod_version, 'mcversion':project.minecraft.version, 'url':project.url, 'updateUrl':project.update_json, 'year':String.valueOf(Year.now().getValue())
+        include "fabric.mod.json"
+
+        // add mod metadata
+        expand "version": project.version
     }
-        
-    // copy everything else, thats not the mcmod.info
+
+    // copy everything else, that"s not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
+        exclude "fabric.mod.json"
     }
-	
-	//ATs
-	rename '(.+_at.cfg)', 'META-INF/$1'
 }
