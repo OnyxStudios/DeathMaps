@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ServerPlayerEntity.class)
+@Mixin(value = ServerPlayerEntity.class, priority = 5000)
 public class MixinPlayerManager {
 
     @Inject(method = "method_14203", at = @At("RETURN"))
