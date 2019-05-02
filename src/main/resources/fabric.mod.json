@@ -3,8 +3,7 @@
     "id": "deathmaps",
     "name": "DeathMaps",
     "description": "Gives you a map that points to your death point",
-    "version": "${version}",
-    "side": "universal",
+    "license": "MIT",
     "authors": [
         {
             "name": "UpcraftLP",
@@ -19,10 +18,17 @@
             }
         }
     ],
-    "license": "MIT",
     "contributors": [
         "B0undaryBreaker"
     ],
+    "icon": "assets/deathmaps/icon.png",
+    "side": "universal",
+    "version": "${version}",
+    "suggests": {
+        "fabric": "*",
+        "playergraves": "*",
+        "modmenu": "*"
+    },
     "mixins": [
         {
             "environment": "*",
