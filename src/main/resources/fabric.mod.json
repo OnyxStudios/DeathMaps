@@ -1,11 +1,32 @@
 {
-  "schemaVersion": 1,
-  "id": "deathmaps",
-  "name": "Death Maps",
-  "description": "Add's Death Map",
-  "version": "${version}",
-  "side": "universal",
-  "mixins": [
-    "mixins.deathmaps.common.json"
-  ]
+    "schemaVersion": 1,
+    "id": "deathmaps",
+    "name": "DeathMaps",
+    "description": "Gives you a map that points to your death point",
+    "version": "${version}",
+    "side": "universal",
+    "authors": [
+        {
+            "name": "UpcraftLP",
+            "contact": {
+                "homepage": "https://twitter.com/UpcraftLP"
+            }
+        },
+        {
+            "name": "Radient_Sora",
+            "contact": {
+                "homepage": "https://twitter.com/radient_sora"
+            }
+        }
+    ],
+    "license": "MIT",
+    "contributors": [
+        "B0undaryBreaker"
+    ],
+    "mixins": [
+        {
+            "environment": "*",
+            "config": "mixins.deathmaps.common.json"
+        }
+    ]
 }
