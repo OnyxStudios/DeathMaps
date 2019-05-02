@@ -1,10 +1,11 @@
 {
+  "schemaVersion": 1,
   "id": "deathmaps",
   "name": "Death Maps",
   "description": "Add's Death Map",
   "version": "${version}",
   "side": "universal",
-  "mixins": {
-    "common": "mixins.deathmaps.common.json"
-  }
+  "mixins": [
+    "mixins.deathmaps.common.json"
+  ]
 }
