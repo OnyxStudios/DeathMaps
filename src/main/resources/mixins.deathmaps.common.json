@@ -1,5 +1,6 @@
 {
   "required": true,
+    "minVersion": "0.7.11",
   "package": "nerdhub.deathmaps.mixins",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
